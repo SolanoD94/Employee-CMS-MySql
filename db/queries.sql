@@ -14,14 +14,15 @@ SELECT
     
 --Query for View All Employees--
  SELECT
-    employee.id,
-    employee.first_name,
-    employee.last_name,
+    E.employee.id,
+    E.employee.first_name,
+    E.employee.last_name,
     role.title AS role,
     department.name AS department,
     role.salary,
-    employee.manager_id AS manager
-    FROM employee
+    M.employee.manager_id AS manager_id,
+    M.employee.first_name AS manager_name
+    FROM employee E
     JOIN role ON role.id = employee.role_id
     JOIN department ON role.department_id = department.id
-    --missing link between Employee and Manager
+    JOIN employee M ON E.employee.id = M.employee.manager_id
