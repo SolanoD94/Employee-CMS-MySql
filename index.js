@@ -1,9 +1,6 @@
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 const db = require('./server');
-let dept_db = [];
-let roles_db = [];
-let employee_db = [];
 
 // Questions to be prompted
 const questions = async () => {
@@ -60,7 +57,7 @@ const questions = async () => {
 
 // View All Roles
     } else if (answers.options === 'View All Roles'){
-        db.query('SELECT role.id, role.title, department.name AS department, role.salary FROM role JOIN department ON role.department_id = department.id', function (err, results) {
+        db.query('SELECT role.id, role.title, department.name AS department, role.salary FROM role LEFT JOIN department ON role.department_id = department.id', function (err, results) {
             if (err) throw err;
             console.table(results);
             questions();
@@ -68,6 +65,15 @@ const questions = async () => {
 
 // Add Role
     } else if (answers.options === 'Add Role'){
+
+        //Populates role_db with the role titles from table "role" to prompt in choices.
+        const results = await db.promise().query('SELECT * FROM department');
+        const dept_db = results[0].map(department =>{
+            return {
+                name: department.name,
+                value: department.id
+            }
+        } );
 
         const newRole = await inquirer
         .prompt([
@@ -77,29 +83,29 @@ const questions = async () => {
                 name: 'roleName',
             },
             {
-                type: 'number',
-                message: 'What is the salary of the new role?',
-                name: 'roleSalary',
-            },
-            {
                 type: 'list',
                 message: 'Which department does the new Role belong to?',
                 name: 'roleDept',
-                choices:['Sales', 'Engineering', 'Finance', 'Legal']
+                choices: dept_db
+            },
+            {
+                type: 'number',
+                message: 'What is the salary of the new role?',
+                name: 'roleSalary',
             }
         ]);
         console.log(newRole);
-        const values = [newRole.roleName, newRole.roleSalary, newRole.roleDept];
+        const values = [newRole.roleName, newRole.roleDept, newRole.roleSalary];
         console.log(values);
-        db.query('INSERT INTO role (title, salary, department_id) VALUES (?)', [values], function (err, results) {
+        db.query('INSERT INTO role (title, department_id, salary) VALUES (?)', [values], function (err, results) {
             if (err) throw err;
             console.log(`Added ${newRole.roleName} role to Database`);
             questions();
             });
 
-// View All Employees
+            // View All Employees
     } else if (answers.options === 'View All Employees'){
-        db.query('SELECT E.employee.id, E.employee.first_name, E.employee.last_name, role.title AS role, department.name AS department, role.salary, M.employee.manager_id AS manager_id, M.employee.first_name AS manager_name FROM employee E JOIN role ON role.id = employee.role_id JOIN department ON role.department_id = department.id JOIN employee M ON E.employee.id = M.employee.manager_id', function (err, results) {
+        db.query('SELECT employee.id, CONCAT(employee.first_name , " ", employee.last_name) AS employee, role.title AS role, department.name AS department, role.salary, CONCAT(manager.first_name, " ", manager.last_name) AS manager_name FROM employee LEFT JOIN role ON role.id = employee.role_id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON manager.id = employee.manager_id', function (err, results) {
             if (err) throw err;
             console.table(results);
             questions();
@@ -108,14 +114,24 @@ const questions = async () => {
 // Add Employee
     } else if (answers.options === 'Add Employee'){
 
-        db.query('SELECT * FROM role', function (err, results) {
-            if (err) throw err;
-            console.table(results);
-            roles_db = results.map(role => role.title);
-            
-            console.log(roles_db);
+        //Populates role_db with the role titles from table "role" to prompt in choices.
+        const results = await db.promise().query('SELECT * FROM role');
+        const roles_db = results[0].map(role => {
+                return {
+                    name: role.title,
+                    value: role.id
+                }
         });
-        console.log("hola" + roles_db);
+
+        //Populates managers_db with the first names of employees from table "employee" to prompt in choices.
+        const choices = await db.promise().query('SELECT * FROM employee');
+        const managers_db = choices[0].map(employee => {
+            return {
+                name: employee.first_name +" "+ employee.last_name,
+                value: employee.id
+            }
+        });
+
         const newEmployee = await inquirer
         .prompt([
             {
@@ -138,13 +154,12 @@ const questions = async () => {
                 type: 'list',
                 message: 'Who is the employee`s manager?',
                 name: 'employeeManager',
-                choices:['John', 'Kim']
+                choices: managers_db
             }
         ]);
         
         console.log(newEmployee);
         const values = [newEmployee.employeeFirstName, newEmployee.employeeLastName, newEmployee.employeeRole, newEmployee.employeeManager];
-        //console.log(values);
         
         db.query('INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?)', [values], function (err, results) {
             if (err) throw err;

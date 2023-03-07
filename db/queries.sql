@@ -14,15 +14,13 @@ SELECT
     
 --Query for View All Employees--
  SELECT
-    E.employee.id,
-    E.employee.first_name,
-    E.employee.last_name,
+    employee.id,
+    CONCAT(employee.first_name , " ", employee.last_name) AS employee
     role.title AS role,
     department.name AS department,
     role.salary,
-    M.employee.manager_id AS manager_id,
-    M.employee.first_name AS manager_name
-    FROM employee E
-    JOIN role ON role.id = employee.role_id
-    JOIN department ON role.department_id = department.id
-    JOIN employee M ON E.employee.id = M.employee.manager_id
+    CONCAT(manager.first_name, " ", manager.last_name) AS manager_name
+    FROM employee
+    LEFT JOIN role ON role.id = employee.role_id
+    LEFT JOIN department ON role.department_id = department.id
+    LEFT JOIN employee manager ON manager.id = employee.manager_id
