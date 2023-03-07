@@ -10,7 +10,7 @@ const questions = async () => {
             type: 'list',
             message: 'What would you like to do?',
             name: 'options',
-            choices: ['View All Departments', 'Add Department', 'Delete Department', 'View All Roles', 'Add Role', 'View All Employees', 'Add Employee']
+            choices: ['View All Departments', 'Add Department', 'Delete Department', 'View All Roles', 'Add Role', 'View All Employees', 'Add Employee', 'Update Employee Role']
         }
     ])
 
@@ -166,6 +166,53 @@ const questions = async () => {
             console.log(`Added ${newEmployee.employeeFirstName} ${newEmployee.employeeLastName} to Database`);
             questions();
             });
-        }return;
+
+// Update Employee Role
+    } else if (answers.options === 'Update Employee Role') {
+        
+        //Populates employeeList_db with the full-names of employees from table "employee" to prompt in choices.
+    const choices = await db.promise().query('SELECT * FROM employee');
+    const employeelist_db = choices[0].map(employee => {
+        return {
+            name: employee.first_name +" "+ employee.last_name,
+            value: employee.id
+        }
+    });
+
+        //Populates role_db with the role titles from table "role" to prompt in choices.
+    const results = await db.promise().query('SELECT * FROM role');
+    const roles_db = results[0].map(role => {
+            return {
+                name: role.title,
+                value: role.id
+            }
+    });
+
+        const updateEmployee = await inquirer
+        .prompt([
+            {
+                type: 'list',
+                message: 'Which employee`s role would you like to update?',
+                name: 'selectEmployee',
+                choices: employeelist_db
+            },
+            {
+                type: 'list',
+                message: 'Which role would you want to assign to the selected employee?',
+                name: 'selectRole',
+                choices: roles_db
+            },
+        ]);
+
+        const selectRole = [updateEmployee.selectRole];
+        const selectEmployee = [updateEmployee.selectEmployee];
+
+        db.query('UPDATE employee SET role_id = ? WHERE id = ?', [selectRole, selectEmployee], function (err, results) {
+            if (err) throw err;
+            console.log(`Updated employee's role`);
+            questions();
+            });
+        }
+        return;
 };
 questions()

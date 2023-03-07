@@ -24,3 +24,7 @@ SELECT
     LEFT JOIN role ON role.id = employee.role_id
     LEFT JOIN department ON role.department_id = department.id
     LEFT JOIN employee manager ON manager.id = employee.manager_id
+
+    UPDATE produce
+SET name = "strawberry"
+WHERE id = 1;
