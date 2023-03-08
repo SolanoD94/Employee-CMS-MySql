@@ -28,6 +28,10 @@ add delete, count and group sql queries.
 MIT
 
 ## Demo Video Link
+https://drive.google.com/file/d/1-siSxGhzE_zL4H6PO5UIuebqOFWVQcqq/view
+
+![Employee-SQL-Challenge-Screenshot](https://user-images.githubusercontent.com/117420563/223636685-1aa9dcf8-eaf3-4823-a2a3-d95b8df18b84.png)
+
 
 ## Project Link on Github
 https://github.com/SolanoD94/Employee-CMS-MySql
